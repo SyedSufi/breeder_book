@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/providers.dart';
+import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
 import '../../birds/presentation/bird_detail_screen.dart';
@@ -71,7 +72,7 @@ class _PairDetailBody extends ConsumerWidget {
 
     Future<void> editPair() async {
       await Navigator.of(context).push(
-        MaterialPageRoute<int>(builder: (_) => PairFormScreen(pair: p)),
+        AppMotion.fadeRoute<int>(PairFormScreen(pair: p)),
       );
       await _refresh(ref);
     }
@@ -154,9 +155,7 @@ class _PairDetailBody extends ConsumerWidget {
           cage: p.cage,
         );
         chickId = await Navigator.of(context).push<int>(
-          MaterialPageRoute<int>(
-            builder: (_) => BirdFormScreen(bird: prefill),
-          ),
+          AppMotion.fadeRoute<int>(BirdFormScreen(bird: prefill)),
         );
         if (chickId == null) return;
         invalidateBirdCaches(ref, birdId: chickId);
@@ -191,7 +190,7 @@ class _PairDetailBody extends ConsumerWidget {
     void openBird(int id) {
       Navigator.of(context)
           .push(
-        MaterialPageRoute<void>(builder: (_) => BirdDetailScreen(birdId: id)),
+        AppMotion.fadeRoute<void>(BirdDetailScreen(birdId: id)),
       )
           .then((_) {
         _refresh(ref);
@@ -293,13 +292,13 @@ class _PairDetailBody extends ConsumerWidget {
     Color eggColor(String status) {
       switch (status) {
         case 'fertile':
-          return Colors.green;
+          return const Color(0xFF16A34A); // semantic, not brand CTA
         case 'infertile':
-          return Colors.grey;
+          return Colors.blueGrey;
         case 'failed':
           return Colors.red;
         case 'hatched':
-          return Colors.teal;
+          return const Color(0xFF0D9488); // distinct hatch cue
         default:
           return Colors.orange;
       }

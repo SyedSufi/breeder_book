@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/providers.dart';
 import '../../../core/services/photo_store.dart';
+import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
 import 'bird_form_screen.dart';
@@ -50,9 +51,7 @@ class BirdDetailScreen extends ConsumerWidget {
                 icon: const Icon(Icons.edit_outlined),
                 onPressed: () async {
                   await Navigator.of(context).push(
-                    MaterialPageRoute<int>(
-                      builder: (_) => BirdFormScreen(bird: b),
-                    ),
+                    AppMotion.fadeRoute<int>(BirdFormScreen(bird: b)),
                   );
                   invalidateBirdCaches(ref, birdId: birdId);
                 },
@@ -91,8 +90,8 @@ class BirdDetailScreen extends ConsumerWidget {
                   if (other.id == birdId) return;
                   Navigator.of(context)
                       .push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => BirdDetailScreen(birdId: other.id!),
+                    AppMotion.fadeRoute<void>(
+                      BirdDetailScreen(birdId: other.id!),
                     ),
                   )
                       .then((_) {
@@ -122,8 +121,8 @@ class BirdDetailScreen extends ConsumerWidget {
                   onTap: () {
                     Navigator.of(context)
                         .push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => BirdDetailScreen(birdId: c.id!),
+                      AppMotion.fadeRoute<void>(
+                        BirdDetailScreen(birdId: c.id!),
                       ),
                     )
                         .then((_) {
@@ -157,19 +156,22 @@ class _Header extends StatelessWidget {
     final hasPhoto = PhotoStore.exists(b.photoFile);
     return Row(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: SizedBox(
-            width: 110,
-            height: 110,
-            child: hasPhoto
-                ? Image.file(File(PhotoStore.pathOf(b.photoFile!)),
-                    fit: BoxFit.cover)
-                : Container(
-                    color: genderColor(b.gender).withValues(alpha: 0.12),
-                    child: Icon(Icons.flutter_dash,
-                        size: 56, color: genderColor(b.gender)),
-                  ),
+        Hero(
+          tag: 'bird-avatar-${b.id}',
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              width: 110,
+              height: 110,
+              child: hasPhoto
+                  ? Image.file(File(PhotoStore.pathOf(b.photoFile!)),
+                      fit: BoxFit.cover)
+                  : Container(
+                      color: genderColor(b.gender).withValues(alpha: 0.12),
+                      child: Icon(Icons.flutter_dash,
+                          size: 56, color: genderColor(b.gender)),
+                    ),
+            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -225,23 +227,21 @@ class _InfoCard extends StatelessWidget {
           ),
         );
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            row('Ring no', b.ringNo),
-            row('Ring year', b.ringYear?.toString() ?? '-'),
-            row('Species', b.speciesName ?? '-'),
-            row('Mutation', b.mutationName ?? '-'),
-            row('Hatch date', showDate(b.hatchDate)),
-            row('Age',
-                ageText(b.hatchDate).isEmpty ? '-' : ageText(b.hatchDate)),
-            row('Father', parentText(b.fatherId, b.fatherRingNo)),
-            row('Mother', parentText(b.motherId, b.motherRingNo)),
-            row('Cage', b.cage ?? '-'),
-          ],
-        ),
+    return AppSurfaceCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          row('Ring no', b.ringNo),
+          row('Ring year', b.ringYear?.toString() ?? '-'),
+          row('Species', b.speciesName ?? '-'),
+          row('Mutation', b.mutationName ?? '-'),
+          row('Hatch date', showDate(b.hatchDate)),
+          row('Age',
+              ageText(b.hatchDate).isEmpty ? '-' : ageText(b.hatchDate)),
+          row('Father', parentText(b.fatherId, b.fatherRingNo)),
+          row('Mother', parentText(b.motherId, b.motherRingNo)),
+          row('Cage', b.cage ?? '-'),
+        ],
       ),
     );
   }

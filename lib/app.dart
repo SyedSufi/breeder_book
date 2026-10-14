@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/constants.dart';
+import 'core/theme/app_theme.dart';
 import 'features/shell/home_screen.dart';
 
 class BreederApp extends StatelessWidget {
@@ -11,10 +12,9 @@ class BreederApp extends StatelessWidget {
     return MaterialApp(
       title: kAppName,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: Colors.teal,
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
+      darkTheme: buildAppDarkTheme(),
+      themeMode: ThemeMode.system,
       home: const HomeScreen(),
     );
   }

@@ -503,9 +503,19 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                     File(PhotoStore.pathOf(_b.photoFile!)),
                     fit: BoxFit.cover,
                   )
-                : Container(
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.photo_outlined, size: 36),
+                : Builder(
+                    builder: (context) {
+                      final scheme = Theme.of(context).colorScheme;
+                      return Container(
+                        color: scheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5),
+                        child: Icon(
+                          Icons.photo_outlined,
+                          size: 36,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      );
+                    },
                   ),
           ),
         ),

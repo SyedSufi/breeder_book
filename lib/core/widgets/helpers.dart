@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../db/repository.dart';
 import '../models/models.dart';
 import '../services/photo_store.dart';
+import '../theme/app_theme.dart';
 import '../utils.dart';
 
 Color genderColor(String gender) {
@@ -305,6 +306,91 @@ class _BirdPickerSheetState extends State<_BirdPickerSheet> {
   }
 }
 
+/// Soft white surface card used for list rows and settings blocks.
+class AppSurfaceCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? margin;
+  final EdgeInsetsGeometry? padding;
+  final VoidCallback? onTap;
+
+  const AppSurfaceCard({
+    super.key,
+    required this.child,
+    this.margin,
+    this.padding,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(AppRadii.lg);
+    Widget content = padding == null
+        ? child
+        : Padding(padding: padding!, child: child);
+
+    content = Material(
+      color: scheme.surface,
+      borderRadius: radius,
+      clipBehavior: Clip.antiAlias,
+      child: onTap == null
+          ? content
+          : InkWell(onTap: onTap, borderRadius: radius, child: content),
+    );
+
+    return Container(
+      margin: margin ?? EdgeInsets.zero,
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        border: Border.all(color: Theme.of(context).dividerColor),
+        boxShadow: AppShadows.md(scheme.onSurface),
+      ),
+      child: content,
+    );
+  }
+}
+
+/// Centered empty-state block for list screens.
+class EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const EmptyState({super.key, required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withValues(alpha: 0.55),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 40, color: scheme.primary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Small coloured chip used for status labels.
 class StatusChip extends StatelessWidget {
   final String text;
@@ -315,12 +401,19 @@ class StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(text, style: TextStyle(color: color, fontSize: 12)),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -328,12 +421,13 @@ class StatusChip extends StatelessWidget {
 Color birdStatusColor(String status) {
   switch (status) {
     case 'breeding':
-      return Colors.green;
+      // Semantic "in season" green — distinct from brand CTA depth.
+      return const Color(0xFF16A34A);
     case 'sold':
       return Colors.orange;
     case 'dead':
       return Colors.red;
     default:
-      return Colors.teal;
+      return Colors.blueGrey;
   }
 }
