@@ -13,7 +13,7 @@ class AppDatabase {
   AppDatabase._();
   static final AppDatabase instance = AppDatabase._();
 
-  static const int schemaVersion = 2;
+  static const int schemaVersion = 4;
   static const String _fileName = 'breeder_book.db';
 
   Future<Database>? _opening;
@@ -30,10 +30,10 @@ class AppDatabase {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // v2: fill starter mutations for species that shipped empty (or incomplete).
-    // Does not delete/rename user-added mutations; only inserts missing names.
-    if (oldVersion < 2) {
-      await _ensureSeedMutations(db);
+    // v2–v4: expand starter species + mutations (idempotent inserts only).
+    // Never deletes/renames user-added rows.
+    if (oldVersion < 4) {
+      await _ensureSeedSpeciesAndMutations(db);
     }
   }
 
@@ -120,9 +120,9 @@ class AppDatabase {
     }
   }
 
-  /// Inserts any seed mutations missing for existing species (by name).
+  /// Inserts any missing seed species + mutations (by name).
   /// Used by upgrades so existing installs pick up new starter lists.
-  Future<void> _ensureSeedMutations(Database db) async {
+  Future<void> _ensureSeedSpeciesAndMutations(Database db) async {
     for (final s in _seedSpecies) {
       final rows = await db.query(
         'species',
@@ -131,8 +131,15 @@ class AppDatabase {
         whereArgs: [s.$1],
         limit: 1,
       );
-      if (rows.isEmpty) continue;
-      final speciesId = rows.first['id'] as int;
+      final int speciesId;
+      if (rows.isEmpty) {
+        speciesId = await db.insert('species', {
+          'name': s.$1,
+          'incubation_days': s.$2,
+        });
+      } else {
+        speciesId = rows.first['id'] as int;
+      }
       for (final m in s.$3) {
         final existing = await db.query(
           'mutations',
@@ -174,12 +181,25 @@ const List<(String, int, List<String>)> _seedSpecies = [
       'Clearwing',
       'Greywing',
       'Yellowface',
+      'Yellowface Type I',
+      'Yellowface Type II',
+      'Goldenface',
       'Lutino',
       'Albino',
       'Lacewing',
       'Fallow',
       'Texas Clearbody',
       'Rainbow',
+      'Blackface',
+      'Blackwing',
+      'Double Black',
+      'Hagoromo (Hogoromo)',
+      'Crested',
+      'Anthracite',
+      'Slate',
+      'Saddleback',
+      'Opaline Spangle',
+      'Opaline Cinnamon',
       'English',
       'American',
     ],
@@ -190,6 +210,7 @@ const List<(String, int, List<String>)> _seedSpecies = [
     [
       // Common types (Pakistan market often records type + colour together)
       'Peachface',
+      'Roseicollis',
       "Fischer's",
       'Personata',
       'Black-cheeked',
@@ -210,8 +231,14 @@ const List<(String, int, List<String>)> _seedSpecies = [
       'Olive',
       'Aqua',
       'Orangeface',
+      'Yellowface',
       'Seagreen',
       'Slaty',
+      'Euwing',
+      'Marbled',
+      'Pale',
+      'NSL Ino',
+      'Mask',
     ],
   ),
   (
@@ -401,6 +428,313 @@ const List<(String, int, List<String>)> _seedSpecies = [
       'Red',
       'Blue Bar',
       'Pied',
+    ],
+  ),
+  // --- Common breeding species added for Pakistan / desi market ---
+  (
+    'Java Sparrow',
+    16,
+    [
+      'Normal Grey',
+      'White',
+      'Pied',
+      'Fawn',
+      'Silver',
+      'Cream',
+      'Black',
+      'Opaline',
+    ],
+  ),
+  (
+    'Dove',
+    14,
+    [
+      'Diamond Dove',
+      'Ring-necked Dove',
+      'Laughing Dove',
+      'Turtle Dove',
+      'White Dove',
+      'Pied',
+      'Red Pied',
+      'Blue Pied',
+      'Silver Pied',
+      'Fawn',
+      'Silver',
+      'Peach',
+      'Whiteface',
+      'Ivory',
+      'Cinnamon',
+    ],
+  ),
+  (
+    'Cockatoo',
+    28,
+    [
+      'Sulphur-crested',
+      'Umbrella (White)',
+      'Moluccan (Salmon-crested)',
+      'Galah (Rose-breasted)',
+      "Goffin's",
+      'Citron-crested',
+      'Bare-eyed (Little Corella)',
+      'Lutino',
+      'Albino',
+    ],
+  ),
+  (
+    'Lorikeet',
+    25,
+    [
+      'Rainbow Lorikeet',
+      'Red-collared',
+      'Scaly-breasted',
+      'Musk Lorikeet',
+      'Lory (Black-capped)',
+      'Green',
+      'Blue',
+      'Lutino',
+      'Olive',
+    ],
+  ),
+  (
+    'Eclectus',
+    28,
+    [
+      'Solomon Island',
+      'Vosmaeri',
+      'Red-sided',
+      'Grand',
+      'Normal',
+    ],
+  ),
+  (
+    'Parrotlet',
+    18,
+    [
+      'Pacific (Celestial)',
+      'Green-rumped',
+      'Spectacled',
+      'Blue',
+      'Turquoise',
+      'Yellow',
+      'White',
+      'Lutino',
+      'Albino',
+      'Fallow',
+      'Dilute',
+    ],
+  ),
+  (
+    'Quaker Parakeet',
+    24,
+    [
+      'Green (Normal)',
+      'Blue',
+      'Turquoise',
+      'Lutino',
+      'Albino',
+      'Cinnamon',
+      'Pallid',
+      'Pied',
+      'Grey Green',
+    ],
+  ),
+  (
+    'Plum-headed Parakeet',
+    23,
+    [
+      'Green (Normal)',
+      'Blue',
+      'Lutino',
+      'Albino',
+      'Cinnamon',
+      'Grey Green',
+      'Opaline',
+      'Dilute',
+      'Pied',
+    ],
+  ),
+  (
+    'Amazon Parrot',
+    26,
+    [
+      'Blue-fronted',
+      'Yellow-crowned',
+      'Orange-winged',
+      'Double Yellow-head',
+      'Red-lored',
+      'Mealy',
+      'Normal Green',
+    ],
+  ),
+  (
+    'Rosella',
+    19,
+    [
+      'Eastern',
+      'Western',
+      'Crimson',
+      'Pale-headed (Mealy)',
+      'Green',
+      'Yellow',
+      'Blue',
+      'Lutino',
+      'Cinnamon',
+      'Opaline',
+    ],
+  ),
+  (
+    'Society Finch',
+    16,
+    [
+      'Chocolate Self',
+      'Fawn Self',
+      'White',
+      'Pied',
+      'Grey',
+      'Crested',
+      'Pearl',
+      'Dilute',
+    ],
+  ),
+  (
+    'Owl Finch',
+    14,
+    [
+      'Normal',
+      'White',
+      'Pied',
+      'Fawn',
+      'Isabel',
+    ],
+  ),
+  (
+    'Star Finch',
+    14,
+    [
+      'Normal Red',
+      'Yellow',
+      'Orange',
+      'Pied',
+      'Dilute',
+      'Fawn',
+      'Silver',
+      'Blue',
+      'White',
+      'Cream',
+      'Isabel',
+    ],
+  ),
+  (
+    'Diamond Sparrow',
+    14,
+    [
+      'Normal',
+      'Yellow',
+      'Pied',
+      'White',
+      'Fawn',
+      'Silver',
+    ],
+  ),
+  (
+    "Hex Finch (Heck's)",
+    15,
+    [
+      'Normal',
+      'Fawn',
+      'Cream',
+      'White',
+      'Pied',
+      'Isabel',
+      'Grey',
+      'Pale-billed',
+    ],
+  ),
+  (
+    'Masked Finch',
+    14,
+    [
+      'Normal',
+      'Fawn',
+      'White',
+      'Pied',
+      'Cream',
+      'Isabel',
+    ],
+  ),
+  (
+    'Parrot Finch',
+    14,
+    [
+      'Blue-faced (Normal)',
+      'Red-throated',
+      'Pin-tailed',
+      'Green',
+      'Blue',
+      'Lutino',
+      'Seagreen',
+      'Dilute',
+      'Pied',
+      'Fawn',
+    ],
+  ),
+  (
+    'Indian Silverbill',
+    12,
+    [
+      'Normal',
+      'White',
+      'Pied',
+      'Fawn',
+      'Cream',
+    ],
+  ),
+  (
+    'Munia',
+    14,
+    [
+      'Scaly-breasted (Nutmeg)',
+      'Black-headed',
+      'White-headed',
+      'Tri-coloured',
+      'White',
+      'Pied',
+      'Fawn',
+    ],
+  ),
+  (
+    'Hill Myna',
+    16,
+    [
+      'Common Hill Myna',
+      'Greater Hill Myna',
+      'Normal',
+    ],
+  ),
+  (
+    "Bourke's Parakeet",
+    18,
+    [
+      'Normal Rose',
+      'Rosa',
+      'Lutino',
+      'Cream',
+      'Opaline',
+      'Yellow',
+      'Pink',
+    ],
+  ),
+  (
+    'Princess Parrot',
+    19,
+    [
+      'Green (Normal)',
+      'Blue',
+      'Lutino',
+      'Albino',
+      'Olive',
+      'Violet',
     ],
   ),
 ];
