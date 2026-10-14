@@ -393,7 +393,9 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                       }
                     },
                   ),
-                  const Divider(),
+                  const SizedBox(height: 8),
+                  const Divider(height: 1),
+                  const SizedBox(height: 16),
                   Text('Parents',
                       style: Theme.of(context).textTheme.titleMedium),
                   _parentTile(isFather: true),
@@ -422,7 +424,10 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                         ),
                       ),
                     ),
-                  const Divider(),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  // Extra top gap so Status floating label clears the divider.
+                  const SizedBox(height: 20),
                   DropdownButtonFormField<String>(
                     // ignore: deprecated_member_use — controlled by State
                     value: _b.status,

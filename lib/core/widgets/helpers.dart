@@ -7,6 +7,7 @@ import '../models/models.dart';
 import '../services/photo_store.dart';
 import '../theme/app_theme.dart';
 import '../utils.dart';
+import 'pill_chrome.dart';
 
 Color genderColor(String gender) {
   switch (gender) {
@@ -259,14 +260,9 @@ class _BirdPickerSheetState extends State<_BirdPickerSheet> {
                   style: Theme.of(context).textTheme.titleMedium),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: TextField(
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Search ring no, species, mutation',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: PillSearchField(
+                hintText: 'Search ...',
                 onChanged: (v) => setState(() {
                   _query = v;
                   _future = _fetch();

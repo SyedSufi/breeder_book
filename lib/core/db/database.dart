@@ -13,7 +13,7 @@ class AppDatabase {
   AppDatabase._();
   static final AppDatabase instance = AppDatabase._();
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
   static const String _fileName = 'breeder_book.db';
 
   Future<Database>? _opening;
@@ -30,10 +30,11 @@ class AppDatabase {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Example for the future (version 2 adds a column):
-    // if (oldVersion < 2) {
-    //   await db.execute('ALTER TABLE birds ADD COLUMN weight_g REAL');
-    // }
+    // v2: fill starter mutations for species that shipped empty (or incomplete).
+    // Does not delete/rename user-added mutations; only inserts missing names.
+    if (oldVersion < 2) {
+      await _ensureSeedMutations(db);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -118,8 +119,38 @@ class AppDatabase {
       }
     }
   }
+
+  /// Inserts any seed mutations missing for existing species (by name).
+  /// Used by upgrades so existing installs pick up new starter lists.
+  Future<void> _ensureSeedMutations(Database db) async {
+    for (final s in _seedSpecies) {
+      final rows = await db.query(
+        'species',
+        columns: ['id'],
+        where: 'LOWER(name) = LOWER(?)',
+        whereArgs: [s.$1],
+        limit: 1,
+      );
+      if (rows.isEmpty) continue;
+      final speciesId = rows.first['id'] as int;
+      for (final m in s.$3) {
+        final existing = await db.query(
+          'mutations',
+          columns: ['id'],
+          where: 'species_id = ? AND LOWER(name) = LOWER(?)',
+          whereArgs: [speciesId, m],
+          limit: 1,
+        );
+        if (existing.isEmpty) {
+          await db.insert('mutations', {'species_id': speciesId, 'name': m});
+        }
+      }
+    }
+  }
 }
 
+/// (name, incubationDays, mutations). Mutations include common colour morphs
+/// and, where breeders usually pick a type/breed instead, popular type names.
 const List<(String, int, List<String>)> _seedSpecies = [
   (
     'Budgerigar',
@@ -137,6 +168,7 @@ const List<(String, int, List<String>)> _seedSpecies = [
       'Opaline',
       'Cinnamon',
       'Spangle',
+      'Double Factor Spangle',
       'Dominant Pied',
       'Recessive Pied',
       'Clearwing',
@@ -145,25 +177,41 @@ const List<(String, int, List<String>)> _seedSpecies = [
       'Lutino',
       'Albino',
       'Lacewing',
+      'Fallow',
+      'Texas Clearbody',
+      'Rainbow',
+      'English',
+      'American',
     ],
   ),
   (
     'Lovebird',
     23,
     [
+      // Common types (Pakistan market often records type + colour together)
+      'Peachface',
+      "Fischer's",
+      'Personata',
+      'Black-cheeked',
+      // Colour mutations
       'Green (Normal)',
       'Blue',
+      'Turquoise',
       'Violet',
       'Lutino',
       'Albino',
       'Opaline',
       'Cinnamon',
       'Pied',
+      'Dutch Pied',
       'Dilute',
       'Pallid',
       'Dark Factor',
-      'Personata',
-      "Fischer's",
+      'Olive',
+      'Aqua',
+      'Orangeface',
+      'Seagreen',
+      'Slaty',
     ],
   ),
   (
@@ -177,8 +225,15 @@ const List<(String, int, List<String>)> _seedSpecies = [
       'Pied',
       'Pearl Pied',
       'Whiteface',
+      'Whiteface Lutino (Albino)',
       'Cinnamon',
+      'Cinnamon Pearl',
       'Yellowface',
+      'Fallow',
+      'Silver',
+      'Pastel',
+      'Emerald',
+      'Olive',
     ],
   ),
   (
@@ -187,22 +242,165 @@ const List<(String, int, List<String>)> _seedSpecies = [
     [
       'Green (Normal)',
       'Blue',
+      'Cobalt',
+      'Mauve',
+      'Violet',
       'Lutino',
       'Albino',
-      'Violet',
-      'Grey',
       'Cinnamon',
-      'Turquoise',
-      'Pied',
+      'Grey',
+      'Grey Green',
       'Olive',
+      'Turquoise',
+      'Aqua',
+      'Pied',
+      'Opaline',
+      'Lacewing',
+      'Fallow',
+      'Clearhead',
+      'Emerald',
+      'Misty',
+      'Dark Factor',
     ],
   ),
-  ('Alexandrine Parakeet', 28, []),
-  ('African Grey', 28, []),
-  ('Macaw', 26, []),
-  ('Conure', 23, []),
-  ('Canary', 13, []),
-  ('Zebra Finch', 12, []),
-  ('Gouldian Finch', 14, []),
-  ('Pigeon', 18, []),
+  (
+    'Alexandrine Parakeet',
+    28,
+    [
+      'Green (Normal)',
+      'Blue',
+      'Lutino',
+      'Albino',
+      'Cinnamon',
+      'Grey',
+      'Grey Green',
+      'Olive',
+      'Turquoise',
+      'Violet',
+      'Dark Factor',
+      'Pied',
+    ],
+  ),
+  (
+    'African Grey',
+    28,
+    [
+      'Congo',
+      'Timneh',
+      'Normal Grey',
+      'F2',
+    ],
+  ),
+  (
+    'Macaw',
+    26,
+    [
+      'Blue & Gold',
+      'Scarlet',
+      'Green-winged',
+      'Military',
+      'Hyacinth',
+      'Catalina',
+      'Harlequin',
+      'Severe (Chestnut-fronted)',
+    ],
+  ),
+  (
+    'Conure',
+    23,
+    [
+      'Sun Conure',
+      'Green Cheek (Normal)',
+      'Green Cheek Cinnamon',
+      'Green Cheek Pineapple',
+      'Green Cheek Turquoise',
+      'Green Cheek Yellow-sided',
+      'Green Cheek Pallid',
+      'Jenday',
+      'Nanday',
+      'Mitred',
+      'Blue Crown',
+    ],
+  ),
+  (
+    'Canary',
+    13,
+    [
+      'Yellow',
+      'White',
+      'Red Factor',
+      'Orange',
+      'Green',
+      'Agate',
+      'Isabel',
+      'Opal',
+      'Satinette',
+      'Lizard',
+      'Gloster',
+      'Border',
+      'Yorkshire',
+      'Norwich',
+      'German Roller',
+      'Spanish Timbrado',
+    ],
+  ),
+  (
+    'Zebra Finch',
+    12,
+    [
+      'Normal Grey',
+      'White',
+      'Pied',
+      'Fawn',
+      'Chestnut Flanked White (CFW)',
+      'Black Cheek',
+      'Black Breast',
+      'Orange Breast',
+      'Penguin',
+      'Isabel',
+      'Dilute',
+      'Dominant Silver',
+    ],
+  ),
+  (
+    'Gouldian Finch',
+    14,
+    [
+      'Red Head',
+      'Black Head',
+      'Yellow Head',
+      'Green Body',
+      'Blue Body',
+      'Yellow Body',
+      'Dilute',
+      'Silver',
+      'White Breast',
+      'Lilac Breast',
+      'Purple Breast',
+    ],
+  ),
+  (
+    'Pigeon',
+    18,
+    [
+      // Pakistan / desi flyer & fancy types commonly recorded
+      'Lahori High Flyer',
+      'High Flyer',
+      'Racing Homer',
+      'Fantail',
+      'Jacobin',
+      'Tumbler',
+      'King',
+      'Frillback',
+      'English Carrier',
+      'Pouter',
+      'Modena',
+      'Normal / Desi',
+      'White',
+      'Black',
+      'Red',
+      'Blue Bar',
+      'Pied',
+    ],
+  ),
 ];

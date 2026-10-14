@@ -5,6 +5,7 @@ import '../../../core/constants.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/pill_chrome.dart';
 import 'bird_detail_screen.dart';
 import 'bird_form_screen.dart';
 import 'birds_providers.dart';
@@ -21,8 +22,10 @@ class BirdsListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('My Birds')),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 72),
+        padding: const EdgeInsets.only(bottom: kFabNavClearance),
         child: FloatingActionButton.extended(
+          backgroundColor: PillChrome.activeFill,
+          foregroundColor: PillChrome.activeInk,
           onPressed: () async {
             await Navigator.of(context).push(
               AppMotion.fadeRoute<int>(const BirdFormScreen()),
@@ -36,54 +39,33 @@ class BirdsListScreen extends ConsumerWidget {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Search ring no, species, mutation, cage',
-                isDense: true,
-              ),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: PillSearchField(
+              hintText: 'Search ...',
               onChanged: (v) {
                 ref.read(birdsFilterProvider.notifier).state =
                     filter.copyWith(query: v);
               },
             ),
           ),
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: const Text('All'),
-                    selected: filter.status == null,
-                    selectedColor: scheme.secondaryContainer,
-                    onSelected: (_) {
-                      ref.read(birdsFilterProvider.notifier).state =
-                          filter.copyWith(clearStatus: true);
-                    },
-                  ),
-                ),
-                for (final s in kBirdStatuses)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(cap(s)),
-                      selected: filter.status == s,
-                      selectedColor: scheme.secondaryContainer,
-                      onSelected: (_) {
-                        ref.read(birdsFilterProvider.notifier).state =
-                            filter.copyWith(status: s);
-                      },
-                    ),
-                  ),
-              ],
-            ),
+          PillFilterBar(
+            selectedId: filter.status,
+            onSelected: (id) {
+              if (id == null) {
+                ref.read(birdsFilterProvider.notifier).state =
+                    filter.copyWith(clearStatus: true);
+              } else {
+                ref.read(birdsFilterProvider.notifier).state =
+                    filter.copyWith(status: id);
+              }
+            },
+            options: [
+              const PillFilterOption(id: null, label: 'All'),
+              for (final s in kBirdStatuses)
+                PillFilterOption(id: s, label: cap(s)),
+            ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Expanded(
             child: asyncBirds.when(
               loading: () => const Center(child: CircularProgressIndicator()),

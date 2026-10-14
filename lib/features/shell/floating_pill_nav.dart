@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_motion.dart';
+import '../../core/widgets/pill_chrome.dart';
 
 /// Sample-style floating capsule nav:
-/// dark pill + cyan rim, lime active chip (icon+label), circular inactive icons.
+/// dark pill + rim, lime active chip (icon+label), circular inactive icons.
 class FloatingPillNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
@@ -16,11 +17,11 @@ class FloatingPillNav extends StatelessWidget {
     required this.destinations,
   });
 
-  static const Color bar = Color(0xFF3E4059);
+  static const Color bar = PillChrome.surface;
   static const Color barBorder = Color(0xFF7EC8C8);
-  static const Color activeFill = Color(0xFFA4D166);
-  static const Color activeInk = Color(0xFF1A1B2E);
-  static const Color inactiveIcon = Color(0xFFFFFFFF);
+  static const Color activeFill = PillChrome.activeFill;
+  static const Color activeInk = PillChrome.activeInk;
+  static const Color inactiveIcon = PillChrome.inactiveInk;
   static const Color inactiveWell = Color(0x33FFFFFF);
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../widgets/pill_chrome.dart';
 import 'app_colors.dart';
 
 /// Corner radii — Organic Biophilic (16–24px).
@@ -154,14 +155,14 @@ ThemeData _build(ColorScheme scheme, Brightness brightness) {
       }),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      // Accent/CTA per MASTER — sun amber for primary actions.
-      backgroundColor: scheme.tertiary,
-      foregroundColor: scheme.onTertiary,
+      // Match pill chrome (lime + dark ink) used by nav / filters.
+      backgroundColor: PillChrome.activeFill,
+      foregroundColor: PillChrome.activeInk,
       elevation: 3,
       focusElevation: 4,
       highlightElevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.lg),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
     ),

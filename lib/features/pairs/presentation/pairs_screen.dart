@@ -5,6 +5,7 @@ import '../../../core/constants.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/pill_chrome.dart';
 import 'pair_detail_screen.dart';
 import 'pair_form_screen.dart';
 import 'pairs_providers.dart';
@@ -20,8 +21,10 @@ class PairsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Breeding Pairs')),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 72),
+        padding: const EdgeInsets.only(bottom: kFabNavClearance),
         child: FloatingActionButton.extended(
+          backgroundColor: PillChrome.activeFill,
+          foregroundColor: PillChrome.activeInk,
           onPressed: () async {
             final id = await Navigator.of(context).push<int>(
               AppMotion.fadeRoute<int>(const PairFormScreen()),

@@ -60,7 +60,7 @@ lib/
 test/widget_test.dart        unit tests for utils
 ```
 
-## 5. Data model (SQLite, schema version 1)
+## 5. Data model (SQLite, schema version 2)
 
 - `species(id, name UNIQUE, incubation_days)`
 - `mutations(id, species_id, name)`

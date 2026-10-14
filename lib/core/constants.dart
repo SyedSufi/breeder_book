@@ -4,6 +4,9 @@ const String kAppName = 'BirdsRecord';
 /// Bottom inset so tab content clears the floating rounded nav card.
 const double kFloatingNavClearance = 96;
 
+/// Extra lift so FABs sit above the floating pill nav (nav ~70 + margins).
+const double kFabNavClearance = 100;
+
 /// Marker written into backup files so we can recognise them on import.
 const String kBackupTag = 'birdsrecord_backup';
 
