@@ -10,6 +10,7 @@ import '../../../core/providers.dart';
 import '../../../core/services/photo_store.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/option_picker.dart';
 import '../../species/presentation/species_providers.dart';
 import 'birds_providers.dart';
 
@@ -124,6 +125,58 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
     await _reloadMutations();
     if (!mounted) return;
     setState(() => _b.mutationId = id);
+  }
+
+  String? get _speciesLabel {
+    for (final s in _species) {
+      if (s.id == _b.speciesId) return s.name;
+    }
+    return null;
+  }
+
+  String get _mutationLabel {
+    if (_b.mutationId == null) return 'None / not sure';
+    for (final m in _mutations) {
+      if (m.id == _b.mutationId) return m.name;
+    }
+    return 'None / not sure';
+  }
+
+  Future<void> _pickSpecies() async {
+    final picked = await pickOption<int>(
+      context,
+      title: 'Select species',
+      selected: _b.speciesId,
+      options: [
+        for (final s in _species)
+          if (s.id != null) SelectOption(value: s.id!, label: s.name),
+      ],
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _b.speciesId = picked.value;
+      _b.mutationId = null;
+    });
+    await _reloadMutations();
+  }
+
+  Future<void> _pickMutation() async {
+    if (_b.speciesId == null) {
+      snack(context, 'Select a species first');
+      return;
+    }
+    final picked = await pickOption<int?>(
+      context,
+      title: 'Select mutation',
+      selected: _b.mutationId,
+      options: [
+        const SelectOption(value: null, label: 'None / not sure'),
+        for (final m in _mutations)
+          if (m.id != null) SelectOption(value: m.id, label: m.name),
+      ],
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _b.mutationId = picked.value);
   }
 
   Future<void> _pickParent({required bool isFather}) async {
@@ -283,28 +336,11 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<int>(
-                          // ignore: deprecated_member_use — controlled by State
-                          value: _b.speciesId,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Species *',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            for (final s in _species)
-                              DropdownMenuItem<int>(
-                                value: s.id,
-                                child: Text(s.name),
-                              ),
-                          ],
-                          onChanged: (v) {
-                            setState(() {
-                              _b.speciesId = v;
-                              _b.mutationId = null;
-                            });
-                            _reloadMutations();
-                          },
+                        child: PickerFormField(
+                          label: 'Species *',
+                          valueText: _speciesLabel,
+                          hint: 'Select species',
+                          onTap: _pickSpecies,
                         ),
                       ),
                       IconButton(
@@ -318,26 +354,10 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<int?>(
-                          // ignore: deprecated_member_use — controlled by State
-                          value: _b.mutationId,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Mutation',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('None / not sure'),
-                            ),
-                            for (final m in _mutations)
-                              DropdownMenuItem<int?>(
-                                value: m.id,
-                                child: Text(m.name),
-                              ),
-                          ],
-                          onChanged: (v) => setState(() => _b.mutationId = v),
+                        child: PickerFormField(
+                          label: 'Mutation',
+                          valueText: _mutationLabel,
+                          onTap: _pickMutation,
                         ),
                       ),
                       IconButton(
