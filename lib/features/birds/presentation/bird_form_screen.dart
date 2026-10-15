@@ -9,8 +9,11 @@ import '../../../core/models/models.dart';
 import '../../../core/providers.dart';
 import '../../../core/services/photo_store.dart';
 import '../../../core/utils.dart';
+import '../../../core/widgets/form_fields.dart';
 import '../../../core/widgets/helpers.dart';
 import '../../../core/widgets/option_picker.dart';
+import '../../../core/widgets/section_chrome.dart';
+import '../../../core/widgets/select_tiles.dart';
 import '../../species/presentation/species_providers.dart';
 import 'birds_providers.dart';
 
@@ -284,11 +287,11 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingBody()
           : Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: kAppScreenPadding,
                 children: [
                   _photoSection(),
                   const SizedBox(height: 16),
@@ -297,13 +300,10 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                     children: [
                       Expanded(
                         flex: 3,
-                        child: TextFormField(
+                        child: AppTextField(
                           controller: _ring,
+                          label: 'Ring / band number *',
                           textCapitalization: TextCapitalization.characters,
-                          decoration: const InputDecoration(
-                            labelText: 'Ring / band number *',
-                            border: OutlineInputBorder(),
-                          ),
                           validator: (v) => (v == null || v.trim().isEmpty)
                               ? 'Ring number is required'
                               : null,
@@ -312,13 +312,10 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         flex: 2,
-                        child: TextFormField(
+                        child: AppTextField(
                           controller: _year,
+                          label: 'Ring year',
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Ring year',
-                            border: OutlineInputBorder(),
-                          ),
                           validator: (v) {
                             final t = v?.trim() ?? '';
                             if (t.isEmpty) return null;
@@ -393,18 +390,13 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                         setState(() => _b.gender = s.first),
                   ),
                   const SizedBox(height: 8),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.cake_outlined),
-                    title: const Text('Hatch date'),
-                    subtitle: Text(showDate(_b.hatchDate)),
-                    trailing: _b.hatchDate == null
+                  AppDateTile(
+                    title: 'Hatch date',
+                    isoDate: _b.hatchDate,
+                    icon: Icons.cake_outlined,
+                    onClear: _b.hatchDate == null
                         ? null
-                        : IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () =>
-                                setState(() => _b.hatchDate = null),
-                          ),
+                        : () => setState(() => _b.hatchDate = null),
                     onTap: () async {
                       final d =
                           await pickDateIso(context, initial: _b.hatchDate);
@@ -416,101 +408,80 @@ class _BirdFormScreenState extends ConsumerState<BirdFormScreen> {
                   const SizedBox(height: 8),
                   const Divider(height: 1),
                   const SizedBox(height: 16),
-                  Text('Parents',
-                      style: Theme.of(context).textTheme.titleMedium),
-                  _parentTile(isFather: true),
+                  const AppSectionTitle('Parents'),
+                  BirdSelectTile(
+                    title: 'Father',
+                    bird: _father,
+                    isMale: true,
+                    subtitle: _father?.label ?? 'Not selected',
+                    onClear: _father == null
+                        ? null
+                        : () => _clearParent(isFather: true),
+                    onTap: () => _pickParent(isFather: true),
+                  ),
                   if (_b.fatherId == null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: TextFormField(
+                      child: AppTextField(
                         controller: _fatherRing,
+                        label: "Father's ring no (if not in your list)",
                         textCapitalization: TextCapitalization.characters,
-                        decoration: const InputDecoration(
-                          labelText: "Father's ring no (if not in your list)",
-                          border: OutlineInputBorder(),
-                        ),
                       ),
                     ),
-                  _parentTile(isFather: false),
+                  BirdSelectTile(
+                    title: 'Mother',
+                    bird: _mother,
+                    isMale: false,
+                    subtitle: _mother?.label ?? 'Not selected',
+                    onClear: _mother == null
+                        ? null
+                        : () => _clearParent(isFather: false),
+                    onTap: () => _pickParent(isFather: false),
+                  ),
                   if (_b.motherId == null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: TextFormField(
+                      child: AppTextField(
                         controller: _motherRing,
+                        label: "Mother's ring no (if not in your list)",
                         textCapitalization: TextCapitalization.characters,
-                        decoration: const InputDecoration(
-                          labelText: "Mother's ring no (if not in your list)",
-                          border: OutlineInputBorder(),
-                        ),
                       ),
                     ),
                   const SizedBox(height: 16),
                   const Divider(height: 1),
-                  // Extra top gap so Status floating label clears the divider.
                   const SizedBox(height: 20),
-                  DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use — controlled by State
+                  AppDropdownField<String>(
                     value: _b.status,
-                    decoration: const InputDecoration(
-                      labelText: 'Status',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: 'Status',
                     items: [
                       for (final s in kBirdStatuses)
-                        DropdownMenuItem<String>(value: s, child: Text(cap(s))),
+                        DropdownMenuItem<String>(
+                          value: s,
+                          child: Text(cap(s)),
+                        ),
                     ],
                     onChanged: (v) => setState(() => _b.status = v ?? 'active'),
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  AppTextField(
                     controller: _cage,
-                    decoration: const InputDecoration(
-                      labelText: 'Cage / location',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: 'Cage / location',
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  AppTextField(
                     controller: _notes,
+                    label: 'Notes',
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Notes',
-                      border: OutlineInputBorder(),
-                    ),
                   ),
                   const SizedBox(height: 24),
-                  FilledButton.icon(
+                  AppPrimarySaveButton(
+                    label: 'Save bird',
                     onPressed: _saving ? null : _save,
-                    icon: const Icon(Icons.check),
-                    label: const Text('Save bird'),
                   ),
                   const SizedBox(height: 24),
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _parentTile({required bool isFather}) {
-    final parent = isFather ? _father : _mother;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(isFather ? Icons.male : Icons.female,
-          color: isFather ? Colors.blue : Colors.pink),
-      title: Text(isFather ? 'Father' : 'Mother'),
-      subtitle: Text(parent?.label ?? 'Not selected'),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (parent != null)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () => _clearParent(isFather: isFather),
-            ),
-          const Icon(Icons.chevron_right),
-        ],
-      ),
-      onTap: () => _pickParent(isFather: isFather),
     );
   }
 

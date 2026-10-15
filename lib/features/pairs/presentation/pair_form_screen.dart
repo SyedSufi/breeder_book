@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/providers.dart';
 import '../../../core/utils.dart';
+import '../../../core/widgets/form_fields.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/section_chrome.dart';
+import '../../../core/widgets/select_tiles.dart';
 import 'pairs_providers.dart';
 
 /// Create or edit a breeding pair. Pops with the saved pair id.
@@ -106,69 +109,52 @@ class _PairFormScreenState extends ConsumerState<PairFormScreen> {
         actions: [TextButton(onPressed: _save, child: const Text('Save'))],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingBody()
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: kAppScreenPadding,
               children: [
-                _birdTile(male: true),
-                _birdTile(male: false),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _cage,
-                  decoration: const InputDecoration(
-                    labelText: 'Cage / location',
-                    border: OutlineInputBorder(),
+                AppSurfaceCard(
+                  child: BirdSelectTile.pairing(
+                    male: true,
+                    bird: _male,
+                    onTap: () => _pick(male: true),
                   ),
                 ),
                 const SizedBox(height: 8),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.event),
-                  title: const Text('Pairing date'),
-                  subtitle: Text(showDate(_p.startDate)),
+                AppSurfaceCard(
+                  child: BirdSelectTile.pairing(
+                    male: false,
+                    bird: _female,
+                    onTap: () => _pick(male: false),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  controller: _cage,
+                  label: 'Cage / location',
+                ),
+                const SizedBox(height: 8),
+                AppDateTile(
+                  title: 'Pairing date',
+                  isoDate: _p.startDate,
                   onTap: () async {
                     final d = await pickDateIso(context, initial: _p.startDate);
                     if (d != null && mounted) setState(() => _p.startDate = d);
                   },
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                AppTextField(
                   controller: _notes,
+                  label: 'Notes',
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes',
-                    border: OutlineInputBorder(),
-                  ),
                 ),
                 const SizedBox(height: 24),
-                FilledButton.icon(
+                AppPrimarySaveButton(
+                  label: 'Save pair',
                   onPressed: _save,
-                  icon: const Icon(Icons.check),
-                  label: const Text('Save pair'),
                 ),
               ],
             ),
-    );
-  }
-
-  Widget _birdTile({required bool male}) {
-    final b = male ? _male : _female;
-    return Card(
-      child: ListTile(
-        leading: b == null
-            ? CircleAvatar(
-                backgroundColor: genderColor(male ? 'male' : 'female')
-                    .withValues(alpha: 0.15),
-                child: Icon(male ? Icons.male : Icons.female,
-                    color: genderColor(male ? 'male' : 'female')),
-              )
-            : BirdAvatar(bird: b),
-        title: Text(male ? 'Male' : 'Female'),
-        subtitle:
-            Text(b == null ? 'Tap to select' : '${b.label}  ${birdSubtitle(b)}'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _pick(male: male),
-      ),
     );
   }
 }

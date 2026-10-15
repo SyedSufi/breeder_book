@@ -9,6 +9,7 @@ import '../../../core/services/photo_store.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/section_chrome.dart';
 import 'bird_form_screen.dart';
 import 'birds_providers.dart';
 import 'pedigree_tree.dart';
@@ -26,7 +27,7 @@ class BirdDetailScreen extends ConsumerWidget {
     return asyncBird.when(
       loading: () => Scaffold(
         appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const AppLoadingBody(),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
@@ -76,13 +77,13 @@ class BirdDetailScreen extends ConsumerWidget {
             ],
           ),
           body: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: kAppScreenPadding,
             children: [
               _Header(bird: b),
               const SizedBox(height: 16),
               _InfoCard(bird: b),
               const SizedBox(height: 16),
-              Text('Pedigree', style: Theme.of(context).textTheme.titleMedium),
+              const AppSectionTitle('Pedigree'),
               const SizedBox(height: 8),
               PedigreeTree(
                 root: b,
@@ -105,8 +106,7 @@ class BirdDetailScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 16),
-              Text('Chicks (${children.length})',
-                  style: Theme.of(context).textTheme.titleMedium),
+              AppSectionTitle('Chicks (${children.length})'),
               if (children.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
@@ -132,7 +132,7 @@ class BirdDetailScreen extends ConsumerWidget {
                 ),
               if ((b.notes ?? '').isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text('Notes', style: Theme.of(context).textTheme.titleMedium),
+                const AppSectionTitle('Notes'),
                 const SizedBox(height: 4),
                 Text(b.notes!),
               ],
@@ -213,34 +213,25 @@ class _InfoCard extends StatelessWidget {
       return 'Unknown';
     }
 
-    Widget row(String k, String v) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 110,
-                child: Text(k, style: Theme.of(context).textTheme.bodySmall),
-              ),
-              Expanded(child: Text(v)),
-            ],
-          ),
-        );
-
     return AppSurfaceCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          row('Ring no', b.ringNo),
-          row('Ring year', b.ringYear?.toString() ?? '-'),
-          row('Species', b.speciesName ?? '-'),
-          row('Mutation', b.mutationName ?? '-'),
-          row('Hatch date', showDate(b.hatchDate)),
-          row('Age',
-              ageText(b.hatchDate).isEmpty ? '-' : ageText(b.hatchDate)),
-          row('Father', parentText(b.fatherId, b.fatherRingNo)),
-          row('Mother', parentText(b.motherId, b.motherRingNo)),
-          row('Cage', b.cage ?? '-'),
+          AppKeyValueRow(label: 'Ring no', value: b.ringNo),
+          AppKeyValueRow(
+              label: 'Ring year', value: b.ringYear?.toString() ?? '-'),
+          AppKeyValueRow(label: 'Species', value: b.speciesName ?? '-'),
+          AppKeyValueRow(label: 'Mutation', value: b.mutationName ?? '-'),
+          AppKeyValueRow(label: 'Hatch date', value: showDate(b.hatchDate)),
+          AppKeyValueRow(
+            label: 'Age',
+            value: ageText(b.hatchDate).isEmpty ? '-' : ageText(b.hatchDate),
+          ),
+          AppKeyValueRow(
+              label: 'Father', value: parentText(b.fatherId, b.fatherRingNo)),
+          AppKeyValueRow(
+              label: 'Mother', value: parentText(b.motherId, b.motherRingNo)),
+          AppKeyValueRow(label: 'Cage', value: b.cage ?? '-'),
         ],
       ),
     );

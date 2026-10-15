@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/providers.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/section_chrome.dart';
 import 'species_providers.dart';
 
 /// Manage the species list (with incubation days) and each species' mutations.
@@ -29,17 +30,29 @@ class SpeciesScreen extends ConsumerWidget {
         ],
       ),
       body: asyncCatalog.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AppLoadingBody(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (catalog) {
+          if (catalog.species.isEmpty) {
+            return const EmptyState(
+              icon: Icons.pets_outlined,
+              message: 'No species yet. Tap + to add one.',
+            );
+          }
           return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               for (final s in catalog.species)
-                _SpeciesTile(
-                  species: s,
-                  mutations: catalog.mutations
-                      .where((m) => m.speciesId == s.id)
-                      .toList(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AppSurfaceCard(
+                    child: _SpeciesTile(
+                      species: s,
+                      mutations: catalog.mutations
+                          .where((m) => m.speciesId == s.id)
+                          .toList(),
+                    ),
+                  ),
                 ),
             ],
           );

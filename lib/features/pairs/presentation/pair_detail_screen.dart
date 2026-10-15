@@ -5,7 +5,10 @@ import '../../../core/models/models.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
+import '../../../core/widgets/egg_clutch_widgets.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/section_chrome.dart';
+import '../../../core/widgets/select_tiles.dart';
 import '../../birds/presentation/bird_detail_screen.dart';
 import '../../birds/presentation/bird_form_screen.dart';
 import '../../birds/presentation/birds_providers.dart';
@@ -24,7 +27,7 @@ class PairDetailScreen extends ConsumerWidget {
     return asyncDetail.when(
       loading: () => Scaffold(
         appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const AppLoadingBody(),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
@@ -37,7 +40,7 @@ class PairDetailScreen extends ConsumerWidget {
           });
           return Scaffold(
             appBar: AppBar(),
-            body: const Center(child: CircularProgressIndicator()),
+            body: const AppLoadingBody(),
           );
         }
         return _PairDetailBody(pairId: pairId, data: data);
@@ -198,195 +201,59 @@ class _PairDetailBody extends ConsumerWidget {
     }
 
     Future<void> eggActions(Egg e, int number) async {
-      await showModalBottomSheet<void>(
-        context: context,
-        builder: (ctx) {
-          void run(VoidCallback action) {
-            Navigator.pop(ctx);
-            action();
-          }
-
-          return SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text('Egg $number',
-                        style: Theme.of(context).textTheme.titleMedium),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.child_care),
-                    title: const Text('Hatched - add chick as a bird'),
-                    subtitle:
-                        const Text('Parents are filled in automatically'),
-                    onTap: () => run(() => hatch(e, createBird: true)),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.child_care_outlined),
-                    title: const Text('Hatched - without bird record'),
-                    onTap: () => run(() => hatch(e, createBird: false)),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.check_circle_outline),
-                    title: const Text('Fertile'),
-                    onTap: () => run(() => setStatus(e, 'fertile')),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.block),
-                    title: const Text('Infertile'),
-                    onTap: () => run(() => setStatus(e, 'infertile')),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.close),
-                    title: const Text('Failed / dead in shell'),
-                    onTap: () => run(() => setStatus(e, 'failed')),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.restart_alt),
-                    title: const Text('Reset to "laid"'),
-                    onTap: () => run(() => setStatus(e, 'laid')),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.event),
-                    title: const Text('Change lay date'),
-                    onTap: () => run(() => changeLayDate(e)),
-                  ),
-                  if (e.chickBirdId != null)
-                    ListTile(
-                      leading: const Icon(Icons.open_in_new),
-                      title: const Text('Open chick'),
-                      onTap: () => run(() => openBird(e.chickBirdId!)),
-                    ),
-                  ListTile(
-                    leading:
-                        const Icon(Icons.delete_outline, color: Colors.red),
-                    title: const Text('Delete egg',
-                        style: TextStyle(color: Colors.red)),
-                    onTap: () => run(() => deleteEgg(e)),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    }
-
-    IconData eggIcon(String status) {
-      switch (status) {
-        case 'fertile':
-          return Icons.check_circle_outline;
-        case 'infertile':
-          return Icons.block;
-        case 'failed':
-          return Icons.close;
-        case 'hatched':
-          return Icons.child_care;
-        default:
-          return Icons.egg_outlined;
-      }
-    }
-
-    Color eggColor(String status) {
-      switch (status) {
-        case 'fertile':
-          return const Color(0xFF16A34A); // semantic, not brand CTA
-        case 'infertile':
-          return Colors.blueGrey;
-        case 'failed':
-          return Colors.red;
-        case 'hatched':
-          return const Color(0xFF0D9488); // distinct hatch cue
-        default:
-          return Colors.orange;
-      }
-    }
-
-    Widget parentTile(Bird? b, String title, bool isMale) {
-      final color = genderColor(isMale ? 'male' : 'female');
-      return ListTile(
-        leading: b == null
-            ? CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.15),
-                child: Icon(isMale ? Icons.male : Icons.female, color: color),
-              )
-            : BirdAvatar(bird: b),
-        title: Text(b == null ? '$title (removed)' : '$title: ${b.label}'),
-        subtitle: b == null ? null : Text(birdSubtitle(b)),
-        trailing: b == null ? null : const Icon(Icons.chevron_right),
-        onTap: b == null ? null : () => openBird(b.id!),
-      );
-    }
-
-    Widget clutchCard(Clutch c, int number) {
-      final clutchEggs = eggs.where((e) => e.clutchId == c.id).toList();
-      return Card(
-        margin: const EdgeInsets.only(top: 12),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Round $number · started ${showDate(c.startDate)}',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                  ),
-                  PopupMenuButton<String>(
-                    onSelected: (v) {
-                      if (v == 'delete') deleteClutch(c);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Text('Delete round'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              if (clutchEggs.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 4),
-                  child: Text('No eggs yet'),
-                ),
-              for (var i = 0; i < clutchEggs.length; i++)
-                ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(eggIcon(clutchEggs[i].status),
-                      color: eggColor(clutchEggs[i].status)),
-                  title: Text('Egg ${i + 1}'),
-                  subtitle: Text([
-                    'Laid ${showDate(clutchEggs[i].layDate)}',
-                    cap(clutchEggs[i].status),
-                    if (clutchEggs[i].status == 'hatched' &&
-                        clutchEggs[i].hatchDate != null)
-                      'on ${showDate(clutchEggs[i].hatchDate)}',
-                    if (dueDate(clutchEggs[i]) != null)
-                      'due ${showDate(dueDate(clutchEggs[i]))}',
-                  ].join(' · ')),
-                  trailing: clutchEggs[i].chickBirdId != null
-                      ? const Icon(Icons.flutter_dash, size: 20)
-                      : const Icon(Icons.more_vert, size: 20),
-                  onTap: () => eggActions(clutchEggs[i], i + 1),
-                ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => addEgg(c),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add egg'),
-                ),
-              ),
-            ],
+      await showEggActionsSheet(
+        context,
+        eggNumber: number,
+        actions: [
+          EggAction(
+            icon: Icons.child_care,
+            title: 'Hatched - add chick as a bird',
+            subtitle: 'Parents are filled in automatically',
+            onTap: () => hatch(e, createBird: true),
           ),
-        ),
+          EggAction(
+            icon: Icons.child_care_outlined,
+            title: 'Hatched - without bird record',
+            onTap: () => hatch(e, createBird: false),
+          ),
+          EggAction(
+            icon: Icons.check_circle_outline,
+            title: 'Fertile',
+            onTap: () => setStatus(e, 'fertile'),
+          ),
+          EggAction(
+            icon: Icons.block,
+            title: 'Infertile',
+            onTap: () => setStatus(e, 'infertile'),
+          ),
+          EggAction(
+            icon: Icons.close,
+            title: 'Failed / dead in shell',
+            onTap: () => setStatus(e, 'failed'),
+          ),
+          EggAction(
+            icon: Icons.restart_alt,
+            title: 'Reset to "laid"',
+            onTap: () => setStatus(e, 'laid'),
+          ),
+          EggAction(
+            icon: Icons.event,
+            title: 'Change lay date',
+            onTap: () => changeLayDate(e),
+          ),
+          if (e.chickBirdId != null)
+            EggAction(
+              icon: Icons.open_in_new,
+              title: 'Open chick',
+              onTap: () => openBird(e.chickBirdId!),
+            ),
+          EggAction(
+            icon: Icons.delete_outline,
+            title: 'Delete egg',
+            destructive: true,
+            onTap: () => deleteEgg(e),
+          ),
+        ],
       );
     }
 
@@ -407,13 +274,33 @@ class _PairDetailBody extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: kAppScreenPadding,
         children: [
-          Card(
+          AppSurfaceCard(
             child: Column(
               children: [
-                parentTile(male, 'Male', true),
-                parentTile(female, 'Female', false),
+                BirdSelectTile(
+                  title: male == null ? 'Male (removed)' : 'Male: ${male.label}',
+                  bird: male,
+                  isMale: true,
+                  subtitle: male == null ? null : birdSubtitle(male),
+                  showChevronWhenEmpty: false,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  onTap: male == null ? null : () => openBird(male.id!),
+                ),
+                BirdSelectTile(
+                  title: female == null
+                      ? 'Female (removed)'
+                      : 'Female: ${female.label}',
+                  bird: female,
+                  isMale: false,
+                  subtitle: female == null ? null : birdSubtitle(female),
+                  showChevronWhenEmpty: false,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  onTap: female == null ? null : () => openBird(female.id!),
+                ),
                 ListTile(
                   leading: const Icon(Icons.home_outlined),
                   title: Text(
@@ -442,8 +329,7 @@ class _PairDetailBody extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: Text('Rounds (${clutches.length})',
-                    style: Theme.of(context).textTheme.titleMedium),
+                child: AppSectionTitle('Rounds (${clutches.length})'),
               ),
               FilledButton.tonalIcon(
                 onPressed: addClutch,
@@ -459,7 +345,15 @@ class _PairDetailBody extends ConsumerWidget {
                   'No rounds yet. Tap "New round" when the hen starts laying, then add each egg.'),
             ),
           for (var i = 0; i < clutches.length; i++)
-            clutchCard(clutches[i], i + 1),
+            ClutchRoundCard(
+              roundNumber: i + 1,
+              clutch: clutches[i],
+              eggs: eggs.where((e) => e.clutchId == clutches[i].id).toList(),
+              dueDateFor: dueDate,
+              onAddEgg: () => addEgg(clutches[i]),
+              onDeleteRound: () => deleteClutch(clutches[i]),
+              onEggTap: eggActions,
+            ),
           const SizedBox(height: 24),
         ],
       ),

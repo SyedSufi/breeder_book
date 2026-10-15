@@ -7,6 +7,7 @@ import '../../../core/constants.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_motion.dart';
 import '../../../core/widgets/helpers.dart';
+import '../../../core/widgets/section_chrome.dart';
 import '../../species/presentation/species_screen.dart';
 import 'backup_providers.dart';
 
@@ -195,7 +196,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Positioned.fill(
               child: ColoredBox(
                 color: scheme.scrim.withValues(alpha: 0.35),
-                child: const Center(child: CircularProgressIndicator()),
+                child: const AppLoadingBody(),
               ),
             ),
         ],

@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 
-/// Shared dark + lime chrome used by floating nav, search, and filter pills
-/// (reference: Supplement Library / sample pill nav).
+/// Dark biophilic chrome for floating nav, search, and filter pills.
+/// Colors map to [AppColors] so daily paths stay one green brand family
+/// (closes dual navy/lime vs mint/forest chrome).
 abstract final class PillChrome {
-  static const Color surface = Color(0xFF3E4059);
-  static const Color surfaceDeep = Color(0xFF2B2D45);
-  static const Color border = Color(0xFFB8B9D0);
-  static const Color activeFill = Color(0xFFA4D166);
-  static const Color activeInk = Color(0xFF1A1B2E);
-  static const Color inactiveFill = Color(0xFF4A4C66);
-  static const Color inactiveInk = Color(0xFFFFFFFF);
-  static const Color hint = Color(0xFFA0A2B8);
-  static const Color icon = Color(0xFFE8E9F2);
+  static const Color surface = AppColors.darkCard;
+  static const Color surfaceDeep = AppColors.darkMuted;
+  static const Color border = AppColors.darkBorder;
+  static const Color activeFill = AppColors.darkPrimary;
+  static const Color activeInk = AppColors.darkOnPrimary;
+  static const Color inactiveFill = Color(0xFF243D2E);
+  static const Color inactiveInk = AppColors.darkForeground;
+  static const Color hint = AppColors.darkMutedForeground;
+  static const Color icon = AppColors.darkForeground;
 }
 
-/// Pill-shaped search field matching the reference screenshot.
+/// Pill-shaped search field matching the floating-nav chrome language.
 class PillSearchField extends StatelessWidget {
   final String hintText;
   final ValueChanged<String>? onChanged;
@@ -34,7 +36,7 @@ class PillSearchField extends StatelessWidget {
     return Container(
       height: 52,
       decoration: BoxDecoration(
-        color: PillChrome.surfaceDeep.withValues(alpha: 0.55),
+        color: PillChrome.surfaceDeep.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: PillChrome.border, width: 1.2),
       ),
@@ -79,7 +81,7 @@ class PillSearchField extends StatelessWidget {
   }
 }
 
-/// Horizontal row of capsule filter pills (lime active / muted inactive).
+/// Horizontal row of capsule filter pills (brand-green active / muted inactive).
 class PillFilterBar extends StatelessWidget {
   final List<PillFilterOption> options;
   final String? selectedId;

@@ -148,47 +148,93 @@ Future<bool> confirm(
 /// Asks for a species name + incubation days. Returns the new species id
 /// (or null if cancelled).
 Future<int?> addSpeciesDialog(BuildContext context, Repo repo) async {
-  final nameCtrl = TextEditingController();
-  final daysCtrl = TextEditingController(text: '18');
-  final ok = await showDialog<bool>(
+  final result = await showDialog<({String name, int days})>(
     context: context,
-    builder: (ctx) => AlertDialog(
+    builder: (ctx) => const _NewSpeciesDialog(),
+  );
+  if (result == null || result.name.isEmpty) return null;
+  return repo.addSpecies(result.name, result.days);
+}
+
+/// Owns text controllers so they are not disposed while the route animates out.
+class _NewSpeciesDialog extends StatefulWidget {
+  const _NewSpeciesDialog();
+
+  @override
+  State<_NewSpeciesDialog> createState() => _NewSpeciesDialogState();
+}
+
+class _NewSpeciesDialogState extends State<_NewSpeciesDialog> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _daysCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController();
+    _daysCtrl = TextEditingController(text: '18');
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _daysCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameCtrl.text.trim();
+    final days = int.tryParse(_daysCtrl.text.trim()) ?? 18;
+    Navigator.pop(context, (name: name, days: days));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
       title: const Text('New species'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: nameCtrl,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(labelText: 'Species name'),
-          ),
-          TextField(
-            controller: daysCtrl,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Incubation days',
-              helperText: 'Used to show the expected hatch date',
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Species name',
+                border: OutlineInputBorder(),
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            TextField(
+              controller: _daysCtrl,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+              decoration: const InputDecoration(
+                labelText: 'Incubation days',
+                helperText: 'Used to show the expected hatch date',
+                border: OutlineInputBorder(),
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
+          onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
+          onPressed: _submit,
           child: const Text('Add'),
         ),
       ],
-    ),
-  );
-  final name = nameCtrl.text.trim();
-  final days = int.tryParse(daysCtrl.text.trim()) ?? 18;
-  if (ok != true || name.isEmpty) return null;
-  return repo.addSpecies(name, days);
+    );
+  }
 }
 
 /// Bottom sheet to pick an existing bird. [genders] limits the list

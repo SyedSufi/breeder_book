@@ -6,6 +6,7 @@ import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
 import '../../../core/widgets/pill_chrome.dart';
+import '../../../core/widgets/section_chrome.dart';
 import 'pair_detail_screen.dart';
 import 'pair_form_screen.dart';
 import 'pairs_providers.dart';
@@ -42,7 +43,7 @@ class PairsScreen extends ConsumerWidget {
         ),
       ),
       body: asyncPairs.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AppLoadingBody(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (list) {
           if (list.isEmpty) {

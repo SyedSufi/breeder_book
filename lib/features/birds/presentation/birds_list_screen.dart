@@ -6,6 +6,7 @@ import '../../../core/theme/app_motion.dart';
 import '../../../core/utils.dart';
 import '../../../core/widgets/helpers.dart';
 import '../../../core/widgets/pill_chrome.dart';
+import '../../../core/widgets/section_chrome.dart';
 import 'bird_detail_screen.dart';
 import 'bird_form_screen.dart';
 import 'birds_providers.dart';
@@ -68,7 +69,7 @@ class BirdsListScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Expanded(
             child: asyncBirds.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const AppLoadingBody(),
               error: (e, _) => Center(child: Text('Error: $e')),
               data: (list) {
                 if (list.isEmpty) {

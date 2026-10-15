@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_motion.dart';
 import 'pill_chrome.dart';
 
+export 'form_fields.dart' show PickerFormField;
+
 /// One row in [OptionPickerScreen].
 class SelectOption<T> {
   final T value;
@@ -117,59 +119,6 @@ class _OptionPickerScreenState<T> extends State<OptionPickerScreen<T>> {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Read-only form field that opens a picker screen on tap.
-class PickerFormField extends StatelessWidget {
-  final String label;
-  final String? valueText;
-  final String hint;
-  final VoidCallback? onTap;
-  final String? Function(String?)? validator;
-
-  const PickerFormField({
-    super.key,
-    required this.label,
-    required this.valueText,
-    this.hint = 'Select…',
-    this.onTap,
-    this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final hasValue = valueText != null && valueText!.isNotEmpty;
-
-    return FormField<String>(
-      key: ValueKey<String?>(valueText),
-      initialValue: valueText,
-      validator: validator,
-      builder: (state) {
-        return InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(4),
-          child: InputDecorator(
-            isEmpty: !hasValue,
-            decoration: InputDecoration(
-              labelText: label,
-              border: const OutlineInputBorder(),
-              errorText: state.errorText,
-              suffixIcon: const Icon(Icons.chevron_right),
-            ),
-            child: Text(
-              hasValue ? valueText! : hint,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: hasValue
-                        ? scheme.onSurface
-                        : scheme.onSurfaceVariant,
-                  ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
