@@ -20,6 +20,8 @@ class PhotoStore {
 
   static String pathOf(String fileName) => p.join(_dir, fileName);
 
+  static String get directoryPath => _dir;
+
   static bool exists(String? fileName) {
     if (fileName == null || fileName.isEmpty) return false;
     return File(pathOf(fileName)).existsSync();
@@ -34,7 +36,8 @@ class PhotoStore {
       imageQuality: 80,
     );
     if (x == null) return null;
-    final name = '${DateTime.now().millisecondsSinceEpoch}${p.extension(x.path)}';
+    final name =
+        '${DateTime.now().millisecondsSinceEpoch}${p.extension(x.path)}';
     await File(x.path).copy(pathOf(name));
     return name;
   }

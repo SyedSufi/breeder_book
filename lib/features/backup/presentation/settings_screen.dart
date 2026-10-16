@@ -31,7 +31,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         [XFile(file.path)],
         subject: '$kAppName backup',
         text:
-            'Backup of my birds. Keep this file safe (Drive / WhatsApp to yourself).',
+            'Backup of my birds and photos. Keep this ZIP file safe (Drive / WhatsApp to yourself).',
       );
     } catch (e) {
       if (mounted) snack(context, 'Backup failed: $e');
@@ -43,7 +43,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _import() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['json'],
+      allowedExtensions: ['zip', 'json'],
     );
     final path = result?.files.single.path;
     if (path == null || !mounted) return;
@@ -123,6 +123,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Your data stays on this device. Export a backup regularly and keep the file in Drive or WhatsApp.\n\n'
+                      'New ZIP backups include bird photos. Older JSON backups are still supported.\n\n'
                       'You now have ${counts['birds'] ?? 0} birds, ${counts['pairs'] ?? 0} pairs and ${counts['eggs'] ?? 0} eggs saved.',
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
